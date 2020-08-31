@@ -66,10 +66,8 @@ def writeFile(ver): # open the file as binary data and attempt a regex search
         else: new_data = (new_data.group(2)).replace(b'@@', b'@') # isolate new data, fix the double @@'s
         if currMime == "text": new_data = new_data[:-1] # fix for text files and trailing @ character
 
-        # making sure dirs exist + extension is good.
+        # making sure dirs exist
         newFile = currFile[:len(path) +1] +"v"+ str(ver) + currFile[len(path):]
-        if newFile.endswith(",v"): newFile[:-2]
-        
         if args["testrun"] == False: # Write the data to disk
             os.makedirs(os.path.dirname(newFile), exist_ok=True)    
             with open(newFile, "wb") as file: file.write(new_data)
@@ -88,6 +86,7 @@ for currFile in listOfFiles:
         verList.extend(re.findall("next	([0-9].*);",dataTemp))
         #print(verList)
         try: # try determine filetype 
+            if newFile.endswith(",v"): newFile[:-2]
             currMime = str((mimetypes.guess_type(currFile))[0])[:4] 
             if currMime == "None": # help out the mime with filetypes
                 for ext in extensionsText:
