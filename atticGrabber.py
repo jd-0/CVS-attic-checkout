@@ -86,7 +86,7 @@ for currFile in listOfFiles:
         verList.extend(re.findall("next	([0-9].*);",dataTemp))
         #print(verList)
         try: # try determine filetype 
-            if newFile.endswith(",v"): newFile[:-2]
+            if currFile.endswith(",v"): currFile[:-2]
             currMime = str((mimetypes.guess_type(currFile))[0])[:4] 
             if currMime == "None": # help out the mime with filetypes
                 for ext in extensionsText:
