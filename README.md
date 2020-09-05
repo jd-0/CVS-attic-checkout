@@ -8,9 +8,7 @@ It removes the heading and tailing CVS info from files,
 
 and extracts the data based on the version numbers within each file
 
-# Step 1: 
-
-# Extract the attic files from a repo using atticExtract.py
+# Step 1: Extract attic files from repo using atticExtract.py
 
 Make a list of directories to copy in "attics.txt"
 
@@ -20,28 +18,20 @@ For example:
   
 Place "atticExtract.py" and "attics.txt" in a directory containing the repo, and run the script.
 
-# Step 2: 
-
-# Process & grab different versions of files using atticGrabber.py
+# Step 2: Grab data from files using atticGrabber.py
 
 Place "atticGrabber.py" script in folder containing the repo, and run it.
 
-Check the "ARGUMENTS" section for info on how the script can be run. For exapmple:
-
-Grab every version of every file:     
-
-      ./atticGrabber.py -a True
-                                    
-      ./atticGrabber.py --all True
+Check the "ARGUMENTS" section for info on different ways the script can be run. For example:
                                        
 Grab ONLY v1.2 files:                 
 
-      ./atticGrabber.py -v 1.2
+      python ./atticGrabber.py -v 1.2
 
-Do a full dry run, with logging:      
+Do a full dry run:      
 
-      ./atticGrabber.py -l True -t True -a True
+      python ./atticGrabber.py -t true
 
-Grab ONLY most recent files:          
+Grab ONLY most recent files, with no log file:          
 
-      ./atticGrabber.py -r True
+      python ./atticGrabber.py -r true -l false
