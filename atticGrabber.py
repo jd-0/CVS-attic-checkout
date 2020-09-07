@@ -14,7 +14,7 @@
 
 ########## TODO ###########
 # - Code optimizations?
-# - Multiprocessing? Speed improvements?
+# - Multiprocessing support?
 ###########################
 
 # IMPORTS #########################################
@@ -43,7 +43,7 @@ def scanRecurse(baseDir): # Recursively List files to process
         if entry.is_file(): yield entry.path
         else: yield from scanRecurse(entry.path)
 
-print("\n---atticGrabber v2.0---") # Display console info
+print("\n---atticGrabber v2.1---") # Display console info
 if argsCMD["logger"] == True: # Logging toggle check
     logname = "{}/log_{}.txt".format(scriptPath, datetime.now().strftime("%d-%m-%y_%H-%M-%S"))
     print("\nCreated logfile at: ", logname)
@@ -60,9 +60,10 @@ def updateLog(*args):
     if argsCMD["logger"] == True: # Clear previous log data
         loggerText = "" # Then, grab all input args, log to file
         for info in args: loggerText += info ; logging.info(loggerText)
-        #print(loggerText)
+        print(loggerText)
         
 def writeFile(currVer, currDate): 
+    #if os.path.exists(currFile): print("File exists, skipping to next...") ; return
     patternNew = setPattern(currVer) # Set new pattern based on current version
     newData = re.search(patternNew, currData) # extract data with regex
     if newData == None or len(newData.group(2)) == 0: return # No op if empty data
@@ -83,20 +84,23 @@ startTime = datetime.now() ; updateLog("\nStart time: {}\n".format((startTime)))
 listOfFiles = scanRecurse(scriptPath)
 
 for currFile in listOfFiles: # Iterate thru listed files
-        if os.path.dirname(currFile) == scriptPath: continue
+        print('\nopening file...', currFile)
+        if os.path.dirname(currFile) == scriptPath: continue # Skips files in same dir as script
         with open(currFile, "rb") as file: # Open file as bytes
             currFileVer = file.readline() # Check if current file has CVS header info
-            if currFileVer.startswith(b"head") == False: updateLog("\nSkipping file:" + currFile + "\nNo CVS header found.\n") ; continue
-            currData = file.read() # Get file data if CVS info found
+            currData = file.read() # Get file data
+        print('got data...')
+        if currFileVer.startswith(b"head") == False: updateLog("\nSkipping file:" + currFile + "\nNo CVS header found.\n") ; continue
         file_name, file_extension = os.path.splitext(currFile) # Get current file extension
         currFileType = str(mimetypes.guess_type(currFile)[0])[:4] # Guess current fileType
         if currFile.endswith('.bat'): currFileType = "text" # Treat .bat as text, not an app
-        allVersions = re.findall(b"(.*)\ndate\t(....\...\...)",currData) # List all ver no. / dates in file Data
+        print('getting versions...')
+        allVersions = re.findall(b"([\.[0-9]*)\ndate\t([012][0-9]*\.[012][0-9]\.[0123][0-9])",currData) # List all ver no. / dates in file Data
         verList, dateList = map(list,zip(*allVersions)) # separate tuples, unpacks lists, byte decode, etc.
         verList, dateList = [x.decode() for x in verList], [y.decode() for y in dateList]
 
         # Write results to log
-        updateLog("\nReading file: {}\nAvailable versions: \n{}\n".format(currFile, str(verList)))
+        updateLog("\nScanned file: {}\nAvailable versions: \n{}\n".format(currFile, str(verList)))
 
         # CHECK CMD LINE ARGS, write data
         if argsCMD["version"] != "None": writeFile(argsCMD["version"], "") # Gets specified version
