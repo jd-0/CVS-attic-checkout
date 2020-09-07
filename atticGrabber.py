@@ -91,7 +91,7 @@ for currFile in listOfFiles: # Iterate thru listed files
         file_name, file_extension = os.path.splitext(currFile) # Get current file extension
         currFileType = str(mimetypes.guess_type(currFile)[0])[:4] # Guess current fileType
         if currFile.endswith('.bat'): currFileType = "text" # Treat .bat as text, not an app
-        allVersions = re.findall(b"(.*)\ndate\t(..........)",currData) # List all ver no. / dates in file Data
+        allVersions = re.findall(b"(.*)\ndate\t(....\...\...)",currData) # List all ver no. / dates in file Data
         verList, dateList = map(list,zip(*allVersions)) # separate tuples, unpacks lists, byte decode, etc.
         verList, dateList = [x.decode() for x in verList], [y.decode() for y in dateList]
 
