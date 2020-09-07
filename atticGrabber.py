@@ -53,7 +53,7 @@ print("\nSettings:", argsCMD, "\n\nChecking out attics...\n")
 # FUNCTIONS #########################################
 def setPattern(ver): # set new regex pattern according to version
     verStr = bytes(str(ver), encoding=encodings[1]).replace(b'.', b'\.') # Format the version string
-    pattern = re.compile(b'\n' + verStr + b'\nlog\n@(.*?)@\ntext\n@(.*?)@\n\n', re.DOTALL)
+    pattern = re.compile(b'\n' + verStr + b'\nlog\n@(.*?)@\ntext\n@(.*?)@\n{2,}1\.', re.DOTALL)
     return pattern
 
 def updateLog(*args):
@@ -69,9 +69,10 @@ def writeFile(currVer, currDate):
     if newData == None or len(newData.group(2)) == 0: return # No op if empty data
     try: commitMsg = str(newData.group(1), encodings[2]) # Get commit message
     except: commitMsg = "" 
-    newData = (newData.group(2)).replace(b'@@', b'@') # Fix for nontext files
+    newData = (newData.group(2)).replace(b'@@', b'@') # Fix for RCS @ literal
 
     newFile = scriptPath + "/checkout/v" + currVer + "/" + currFile[len(scriptPath)+1:].split("\\", 1)[1] # Make a new filename
+    
     if argsCMD["testrun"] == False: # test/dry run enabled = skip writing files
         os.makedirs(os.path.dirname(newFile), exist_ok=True) # make sure directories exist
         with open(newFile, "wb") as file: file.write(newData) # write bytes to disk
@@ -84,17 +85,18 @@ startTime = datetime.now() ; updateLog("\nStart time: {}\n".format((startTime)))
 listOfFiles = scanRecurse(scriptPath)
 
 for currFile in listOfFiles: # Iterate thru listed files
-        print('\nopening file...', currFile)
+        print('\nOpening file:', currFile)
         if os.path.dirname(currFile) == scriptPath: continue # Skips files in same dir as script
-        with open(currFile, "rb") as file: # Open file as bytes
-            currFileVer = file.readline() # Check if current file has CVS header info
+        with open(currFile, "rbU") as file: # Open file as bytes
+            currFileHead = file.readline() # Check if current file has CVS header info
             currData = file.read() # Get file data
-        print('got data...')
-        if currFileVer.startswith(b"head") == False: updateLog("\nSkipping file:" + currFile + "\nNo CVS header found.\n") ; continue
+        currData += b"1.0" # Append at end of data to assist regex
+        print('Got data from file!')
+        if currFileHead.startswith(b"head") == False: updateLog("\nSkipping file:" + currFile + "\nNo CVS header found.\n") ; continue
         file_name, file_extension = os.path.splitext(currFile) # Get current file extension
         currFileType = str(mimetypes.guess_type(currFile)[0])[:4] # Guess current fileType
         if currFile.endswith('.bat'): currFileType = "text" # Treat .bat as text, not an app
-        print('getting versions...')
+        print('Scanning for available versions...')
         allVersions = re.findall(b"([\.[0-9]*)\ndate\t([012][0-9]*\.[012][0-9]\.[0123][0-9])",currData) # List all ver no. / dates in file Data
         verList, dateList = map(list,zip(*allVersions)) # separate tuples, unpacks lists, byte decode, etc.
         verList, dateList = [x.decode() for x in verList], [y.decode() for y in dateList]
