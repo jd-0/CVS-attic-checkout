@@ -1,41 +1,29 @@
-# CVS-attic-checkout
+# python-stuff
 
-Scripts to restore deleted files within the Attic folders from certain CVS repos.
+Various scripts to do stuff
 
-Copies all folders + files while preserving folder hierarchy.
+## bulkCVScheckout
 
-It removes the heading and tailing CVS info from files, 
+    Gets EVERY revision of every file, including "Attic" folders within CVS repos.
 
-and extracts the data based on the version numbers within each file
+## bytePatch
 
-# Step 1: Extract attic files from repo using atticExtract.py
+    Patches a binary file at the specified offset.
 
-Make a list of directories to copy in "attics.txt".
+## romPadder
 
-For example: 
-  
-          find . -iname "attic*" > attics.txt
-  
-Refer to the provided attics.txt for an example of how it should look.
+    Pads a binary file to lengths of 4, 8, 16, or 32 MBits.
 
-Place "atticExtract.py" and "attics.txt" in a directory containing the repo, and run the script.
+## insertBins
 
-# Step 2: Grab data from files using atticGrabber.py
+    Inserts files at specified offsets.
+      
+    Uses a CSV style list in format of [filename],[startPosition],[bank/address],[length].
+      
+    Example: zl3.CHR,00000,108000,8000
 
-Use a bulk renamer to remove all ",v" from filenames, like PowerRename for example.
+## hex2bin
 
-Place "atticGrabber.py" script in folder containing the repo, and run it.
-
-Check the "ARGUMENTS" section for info on different ways the script can be run. For example:
-                                       
-Grab ONLY v1.2 files:                 
-
-      python ./atticGrabber.py -v 1.2
-
-Do a full dry run:      
-
-      python ./atticGrabber.py -t true
-
-Grab ONLY most recent files, with no log file:          
-
-      python ./atticGrabber.py -r true -l false
+    Converts Intel hex to binary files, supports 3-byte extended segment addresses
+      
+    (NOTE: Not my work, I only modified it).
