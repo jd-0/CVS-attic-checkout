@@ -10,6 +10,7 @@
 
 import binascii, fileinput, sys
 
+if len(sys.argv) == 1: print("USAGE: python hex2bin.py hexfile") ; sys.exit(1)
 endian,multiply = "big",8
 if len(sys.argv) > 2:
     endian,multiply = sys.argv[2],int(sys.argv[3])

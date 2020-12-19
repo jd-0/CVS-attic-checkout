@@ -3,6 +3,8 @@
 # python bytePatch.py rom.sfc 7fd9 6
 
 import sys
+
+if len(sys.argv) == 1: print("USAGE: python bytePatch.py romfile (string/int)") ; sys.exit(1)
 # open input file as byte array, get input offset
 with open(sys.argv[1],'rb') as f: buff = bytearray(f.read())
 offset = int(sys.argv[2], 16)
