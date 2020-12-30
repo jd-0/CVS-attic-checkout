@@ -5,18 +5,22 @@
 # with a 3-byte payload in the extended segment address records (most other tools reject this)
 
 # Usage: 
-# ./hex2bin.py input.hex
-# python hex2bin.py input.hex big 16
+# ./hex2bin.py -i input.hex
+# ./hex2bin.py -i input.hex -e big -m 16 -p FF
 
-import binascii, fileinput, sys
+import binascii, sys, argparse
 
-if len(sys.argv) == 1: print("USAGE: python hex2bin.py hexfile") ; sys.exit(1)
-endian,multiply = "big",8
-if len(sys.argv) > 2:
-    endian,multiply = sys.argv[2],int(sys.argv[3])
-    words = ["big", "little","BIG","LITTLE"]
-    if endian not in words: endian = "big"
-    if multiply not in range(1,33): multiply = 8
+ap = argparse.ArgumentParser()
+ap.add_argument("-i", "--input", required=True, type=str,
+	help = "path to input file")
+ap.add_argument("-e", "--endian", required=False, type=str, default="big",
+	help="endianness of hex data")
+ap.add_argument("-m", "--multiply", required=False, type=int, default=8,
+	help="offset multiplier")
+ap.add_argument("-p", "--padding", required=False, type=str, default="00",
+	help="byte to use for padding")
+args = vars(ap.parse_args())
+paddByte = int(args['padding'],16)
 
 def checksum_of(data): # Sum of byte values
     chk = 0
@@ -47,8 +51,9 @@ def parse_record(lineno, line):
 data = bytearray()
 offset = 0
 
-for (lineno, line) in enumerate(fileinput.input()):
-    
+with open(args['input'], "r") as file: fileData = file.readlines()
+for (lineno, line) in enumerate(fileData):
+
     # Skip lines that don't start with a :
     if not line.startswith(":"): continue
 
@@ -60,7 +65,7 @@ for (lineno, line) in enumerate(fileinput.input()):
         # Extend byte array so the data fits
         if len(data) < end_addr:
             new_size = end_addr - len(data)
-            for i in range(new_size): data.append(0xFF) # pad with ff or 00
+            for i in range(new_size): data.append(paddByte) # pad with ff or 00
 
         # Fill array
         data[start_addr:end_addr] = payload
@@ -69,7 +74,7 @@ for (lineno, line) in enumerate(fileinput.input()):
         # Extended segment address, set offset for future data
         # NOTE: File format specifies this must be 2 bytes,
         # but Nintendo seems to use a format with 3 bytes... >.>
-        offset = int.from_bytes(payload, byteorder=endian, signed=False) * multiply
+        offset = int.from_bytes(payload, byteorder=args['endian'], signed=False) * args['multiply']
     else:
         # We don't support Start Segment Address (03), 
         # Extended Linear Address (04) or Start Linear Address (05)
@@ -80,5 +85,8 @@ else: # We ran out of lines before hitting an end of file record (which would br
     print("error: hit end of input before EOF record", file=sys.stderr)
     sys.exit(1)
 
+# trim 8000h leading 0's or FF's
+if sum(data[:0x8000]) == 0 or sum(data[:0x8000]) == 8355840: data = data[0x8000:]
+
 # Print output data to stdout
-with open((fileinput.filename()).replace(".hex", ".bin"), "wb") as file: file.write(bytes(data))
+with open(args['input'].split(".")[0] + '.bin', "wb") as file: file.write(bytes(data))
